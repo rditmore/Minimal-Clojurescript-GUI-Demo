@@ -8,6 +8,13 @@
    [goog.ui.Tab :as gtab]
    [goog.ui.TabBar :as gtabb]))      
 
+;; -------------------------= Debug =-----------------------
+(defn debug
+  "Output goes to your web browser's console"
+  [msg]
+  (js/console.log msg))
+;;(defn debug [_]) ;; switch to this debug to turn off output
+
 ;; -------------------------= State =-----------------------
 (def database-connected? (atom false))
 (def messaging-connected? (atom false))
@@ -30,7 +37,7 @@
 (defn handle-tab-select [tabbar e]
   (let [tab (.target e)
         content (.getElement goog.dom (str (. tabbar (getId)) "_content"))]
-    (.setTextContent goog.dom content (. tab (getCaption)))))
+    (.setTextContent goog.dom content (str "You selected the \"" (. tab (getCaption)) "\" tab"))))
 
 (defn button-color
   "Associate a colour with the states"
@@ -46,9 +53,22 @@
   (.setValue (.target e)
              (button-color (toggle-state! s))))
 
+(defn handle-advanced-enable-disable-check-box [e]
+  (let [checkbox (.target e)
+        advanced-tab (.getChildAt tabbar 3)]
+    (debug (str "box is check with " (.checked checkbox)))
+    (.setEnabled advanced-tab (.checked checkbox))))
+
+(defn handle-hellow-show-hide-check-box [e]
+  (let [checkbox (.target e)
+        hello-tab (.getChildAt tabbar 0)]
+    (.setVisible hello-tab (.checked checkbox))))
+
 ;; ---------------------= MAIN =------------------------
 ;; Main entry function
 (defn ^:export main []
+  (debug "Entered into the main function -- should be seen on browser console")
+
   ;; Populate a DOM via decoration.
   (.decorate tabbar (.getElement goog.dom "top"))
 
@@ -75,5 +95,18 @@
            messaging-button
            goog.ui.Component.EventType/ACTION
            (partial handle-button-push
-                    messaging-connected?)))      
+                    messaging-connected?))
+
+  ;; listener for the checkbox
+  ;; could also use (str "enable" (. tabbar (getId))) instead of
+  ;; explict `enable_top'
+  (.listen goog.events
+           (.getElement goog.dom "enable_top") 
+           goog-event-type/CLICK
+           handle-advanced-enable-disable-check-box)
+
+  (.listen goog.events
+           (.getElement goog.dom "show_top")
+           goog-event-type/CLICK
+           handle-hellow-show-hide-check-box))
 
